@@ -1,5 +1,8 @@
 import resend from "./config.js";
-import { verificationEmailTemplate,welcomeEmailTemplate } from "./email-template.js";
+import {
+  verificationEmailTemplate,
+  welcomeEmailTemplate,
+} from "./email-template.js";
 export async function sendVerificationEmail(email, verificationToken) {
   try {
     const { data, error } = await resend.emails.send({
@@ -7,7 +10,10 @@ export async function sendVerificationEmail(email, verificationToken) {
 
       to: [email],
       subject: "verify your email address now",
-      html: verificationEmailTemplate.replace("{verification}", verificationToken),
+      html: verificationEmailTemplate.replace(
+        "{verification}",
+        verificationToken
+      ),
     });
     // console.log(data,error)
   } catch (error) {
@@ -29,4 +35,29 @@ export async function sendWelcomeEmail(email, name) {
     console.log("error sending welcome email", error);
     throw new Error("error sending welcome email");
   }
+}
+export async function sendResetEmail(email, token) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Acme <onBoarding@resend.dev>",
+
+      to: [email],
+      subject: "here is your password reset email!",
+      html: "hey there here is your password reset token " + token,
+    });
+    // console.log(data,error)
+  } catch (error) {
+    console.log("error sending reset email", error);
+    throw new Error("error sending reset email");
+  }
+}
+export async function sendChangePasswordEmail(email) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "Acme <onBoarding@resend.dev>",
+      to: [email],
+      subject: "password changed successfully",
+      html: "your password changed sucessfully",
+    });
+  } catch (error) {}
 }

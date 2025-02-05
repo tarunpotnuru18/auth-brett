@@ -4,7 +4,12 @@ import zoderror from "../utils/zod-error.js";
 import generateVerificationToken from "../utils/verification-token.js";
 import generateJWTtoken from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
-import { sendVerificationEmail, sendWelcomeEmail } from "../resend/email.js";
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendResetEmail,
+  sendChangePasswordEmail,
+} from "../resend/email.js";
 
 export async function signup(req, res) {
   try {
@@ -72,64 +77,6 @@ export async function signup(req, res) {
   }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
-export async function login(req, res) {
-  try {
-    let { email, password } = req.body;
-    let userDetails = await user.findOne({
-      email,
-    });
-    if (!userDetails) {
-      res.status(400).json({
-        success: false,
-        message: "invalid credentials",
-      });
-      return;
-    }
-    let isPasswordValid = await bcrypt.compare(password, userDetails.password);
-
-    if (!isPasswordValid) {
-      res.status(400).json({
-        success: false,
-        message: "invalid password",
-      });
-      return;
-    }
-
-    let verifed = userDetails.isVerified;
-    if (!verifed) {
-      res.status(400).json({
-        success: false,
-        message: "user not verified",
-      });
-      return;
-    }
-    let jwttoken = generateJWTtoken(
-      userDetails._id,
-      process.env.jwt_key.toString()
-    );
-
-    res.cookie("token", jwttoken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      samesite: "strict",
-      maxAge: 5 * 24 * 60 * 60 * 1000,
-    });
-    res.status(200).json({
-      success: true,
-      message: "user successfully logged in",
-    });
-  } catch (error) {
-    res.status(400).json({
-      success: false,
-      message: error.message,
-    });
-  }
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-export function logout(req, res) {
-  res.send("logout");
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////
 export async function verifyEmail(req, res) {
   try {
     console.log(req.body);
@@ -178,4 +125,162 @@ export async function verifyEmail(req, res) {
     });
   }
 }
+/////////////////////////////////////////////////////////
+export async function login(req, res) {
+  try {
+    let { email, password } = req.body;
+    let userDetails = await user.findOne({
+      email,
+    });
+    if (!userDetails) {
+      res.status(400).json({
+        success: false,
+        message: "invalid credentials",
+      });
+      return;
+    }
+    let isPasswordValid = await bcrypt.compare(password.toString(), userDetails.password);
+
+    if (!isPasswordValid) {
+      res.status(400).json({
+        success: false,
+        message: "invalid password",
+      });
+      return;
+    }
+
+    let verifed = userDetails.isVerified;
+    if (!verifed) {
+      res.status(400).json({
+        success: false,
+        message: "user not verified",
+      });
+      return;
+    }
+    let jwttoken = generateJWTtoken(
+      userDetails._id,
+      process.env.jwt_key.toString()
+    );
+
+    res.cookie("token", jwttoken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      samesite: "strict",
+      maxAge: 5 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).json({
+      success: true,
+      message: "user successfully logged in",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+export function logout(req, res) {
+  res.clearCookie("token");
+  res.status(200).json({ success: true, message: "logged out successfullyf" });
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+export async function forgotPassword(req, res) {
+  try {
+    let { email } = req.body;
+    let userDetails = await user.findOne({ email });
+    if (!userDetails) {
+      res.status(400).json({
+        success: false,
+        message: "invalid credentials",
+      });
+      return;
+    }
+    let resetToken = generateVerificationToken();
+    //send resettoken to email
+    await sendResetEmail("tarunpotnuru18@gmail.com", resetToken);
+    let hashedResetToken = await bcrypt.hash(resetToken, 10);
+    userDetails.resetPasswordToken = hashedResetToken;
+    userDetails.resetPasswordTokenExpiresAt = Date.now() + 10 * 60 * 1000;
+    await userDetails.save();
+    res.status(200).json({
+      success: true,
+      message: "reset token sucessfully sent to email",
+    });
+  } catch (error) {
+    res.status(200).json({
+      success: true,
+      message: "reset token sucessfully sent to email",
+    });
+  }
+}
+
+export async function changePassword(req, res) {
+  try {
+    let { email, newPassword } = req.body;
+    const { token:passwordToken } = req.params;
+    let userDetails = await user.findOne({
+      email,
+      resetPasswordTokenExpiresAt: { $gt: Date.now() },
+    });
+    if (!userDetails) {
+      console.log(userDetails);
+      res.status(400).json({
+        message: "invalid credentials",
+        success: false,
+      });
+      return;
+    }
+    let isvalidToken = await bcrypt.compare(
+      passwordToken.toString(),
+      userDetails.resetPasswordToken
+    );
+    if (!isvalidToken) {
+      res.status(400).json({
+        message: "invalid token",
+        success: false,
+      });
+      return;
+    }
+    let hashedpassword = await bcrypt.hash(newPassword.toString(), 10);
+    userDetails.password = hashedpassword;
+    userDetails.resetPasswordToken = undefined;
+    userDetails.resetPasswordTokenExpiresAt = undefined;
+    await userDetails.save();
+    await sendChangePasswordEmail("tarunpotnuru18@gmail.com");
+    res.status(200).json({
+      message: "password successflly updated",
+      success: true,
+    });
+  } catch (error) {
+    res.status(400).json({
+      message: error.message,
+      success: false,
+    });
+  }
+}
+
+export async function checkAuth(req, res) {
+  try {
+    let userDetails = await user.findOne({
+      _id: req.userid,
+    });
+
+    if (!userDetails) {
+      return res.status(401).json({
+        success: false,
+        message: "unauthorized request",
+      });
+    }
+
+    res.status(200).json({
+      ...userDetails._doc,
+      password: undefined,
+    });
+  } catch (error) {
+    console.log("error checking auth", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+}
