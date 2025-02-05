@@ -4,10 +4,7 @@ import zoderror from "../utils/zod-error.js";
 import generateVerificationToken from "../utils/verification-token.js";
 import generateJWTtoken from "../utils/jwt.js";
 import bcrypt from "bcryptjs";
-import { sendVerificationEmail } from "../resend/email.js";
-export function signin(req, res) {
-  res.send("signin");
-}
+import { sendVerificationEmail, sendWelcomeEmail } from "../resend/email.js";
 
 export async function signup(req, res) {
   try {
@@ -36,14 +33,16 @@ export async function signup(req, res) {
       res.status(400).json({
         message: "user already exists",
       });
+      return;
     }
     const hashedpassword = await bcrypt.hash(password, 10);
     const verificationToken = generateVerificationToken();
+    const hashedVerificationToken = await bcrypt.hash(verificationToken, 10);
     let dataCreation = await user.create({
       email,
       password: hashedpassword,
       username,
-      verificationToken: verificationToken,
+      verificationToken: hashedVerificationToken,
       verficationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
     });
 
@@ -60,19 +59,123 @@ export async function signup(req, res) {
     sendVerificationEmail("tarunpotnuru18@gmail.com", verificationToken);
     res.status(201).json({
       success: true,
-      message: "user succeessfully signed in",
+      message: "user succeessfully signedup in",
       user: {
         ...dataCreation._doc,
       },
     });
   } catch (error) {
-    console.log(error);
     res.status(400).json({
       success: false,
       message: error.message,
     });
   }
 }
+///////////////////////////////////////////////////////////////////////////////////////////
+export async function login(req, res) {
+  try {
+    let { email, password } = req.body;
+    let userDetails = await user.findOne({
+      email,
+    });
+    if (!userDetails) {
+      res.status(400).json({
+        success: false,
+        message: "invalid credentials",
+      });
+      return;
+    }
+    let isPasswordValid = await bcrypt.compare(password, userDetails.password);
+
+    if (!isPasswordValid) {
+      res.status(400).json({
+        success: false,
+        message: "invalid password",
+      });
+      return;
+    }
+
+    let verifed = userDetails.isVerified;
+    if (!verifed) {
+      res.status(400).json({
+        success: false,
+        message: "user not verified",
+      });
+      return;
+    }
+    let jwttoken = generateJWTtoken(
+      userDetails._id,
+      process.env.jwt_key.toString()
+    );
+
+    res.cookie("token", jwttoken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      samesite: "strict",
+      maxAge: 5 * 24 * 60 * 60 * 1000,
+    });
+    res.status(200).json({
+      success: true,
+      message: "user successfully logged in",
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export function logout(req, res) {
   res.send("logout");
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////
+export async function verifyEmail(req, res) {
+  try {
+    console.log(req.body);
+    const { verificationToken, email } = req.body;
+
+    let userDetails = await user.findOne({
+      email,
+      verficationTokenExpiresAt: { $gt: Date.now() },
+    });
+
+    if (!userDetails) {
+      res.status(401).json({
+        message: "user does not exist",
+        success: false,
+      });
+      return;
+    }
+    console.log(verificationToken, userDetails.verificationToken);
+
+    let isVerificationTokenValid = await bcrypt.compare(
+      verificationToken.toString(),
+      userDetails.verificationToken
+    );
+    if (!isVerificationTokenValid) {
+      res.status(401).json({
+        message: "verification token invalid",
+        success: false,
+      });
+      return;
+    }
+    userDetails.isVerified = true;
+    userDetails.verificationToken = undefined;
+    userDetails.verficationTokenExpiresAt = undefined;
+    await userDetails.save();
+
+    await sendWelcomeEmail("tarunpotnuru18@gmail.com", userDetails.username);
+    res.status(200).json({
+      message: "verification successful",
+      success: true,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      message: error.message,
+      success: false,
+    });
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
