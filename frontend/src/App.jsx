@@ -1,50 +1,22 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
-import "./App.css";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
-import { Toolbar } from "radix-ui";
+import { Routes,Route } from 'react-router-dom'
+import Signup from './pages/SignupPage'
+import  Login from "./pages/Loginpage"
+import Welcome from "./pages/Welcome"
 
 function App() {
-  const [count, setCount] = useState(0);
+
 
   return (
     <>
-    <div className="">
-       <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="item-1">
-        <AccordionTrigger>Is it accessible?</AccordionTrigger>
-        <AccordionContent>
-          Yes. It adheres to the WAI-ARIA design pattern.
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="item-2">
-        <AccordionTrigger>Is it styled?</AccordionTrigger>
-        <AccordionContent>
-          Yes. It comes with default styles that matches the other
-          components&apos; aesthetic.
-        </AccordionContent>
-      </AccordionItem>
-      <AccordionItem value="item-3">
-        <AccordionTrigger>Is it animated?</AccordionTrigger>
-        <AccordionContent>
-          Yes. It's animated by default, but you can disable it if you prefer.
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion></div>
-      <Toolbar></Toolbar>
-    
-   
+      <Routes>
+        <Route path='/' element={<Welcome/>} ></Route>
+        <Route path='/signup' element={<Signup></Signup>}></Route>
+        <Route path='/login' element={<Login></Login>}></Route>
+      </Routes>
+      
     </>
-  );
+  )
 }
 
-
-
-export default App;
+export default App
