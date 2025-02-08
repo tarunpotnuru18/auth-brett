@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 
 export default function Welcome() {
-  const { toast } = useToast();
+  
   return (
     <>
       <div className="bg-black text-white  min-h-screen w-screen pt-[50px]">

@@ -139,7 +139,10 @@ export async function login(req, res) {
       });
       return;
     }
-    let isPasswordValid = await bcrypt.compare(password.toString(), userDetails.password);
+    let isPasswordValid = await bcrypt.compare(
+      password.toString(),
+      userDetails.password
+    );
 
     if (!isPasswordValid) {
       res.status(400).json({
@@ -220,7 +223,7 @@ export async function forgotPassword(req, res) {
 export async function changePassword(req, res) {
   try {
     let { email, newPassword } = req.body;
-    const { token:passwordToken } = req.params;
+    const { token: passwordToken } = req.params;
     let userDetails = await user.findOne({
       email,
       resetPasswordTokenExpiresAt: { $gt: Date.now() },
@@ -276,6 +279,7 @@ export async function checkAuth(req, res) {
     }
 
     res.status(200).json({
+      success: true,
       ...userDetails._doc,
       password: undefined,
     });
