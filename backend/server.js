@@ -7,7 +7,7 @@ import authrouter from "./routes/auth-routes.js";
 import connectTodb from "./database/connect.js";
 import cookieParser from "cookie-parser";
 connectTodb(process.env.mongo_url);
-app.use(cors({ origin: "http://localhost:5173",credentials: true }))
+app.use(cors({ origin: "http://localhost:5174",credentials: true }))
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api", authrouter);

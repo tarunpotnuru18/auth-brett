@@ -67,6 +67,7 @@ export async function signup(req, res) {
       message: "user succeessfully signedup in",
       user: {
         ...dataCreation._doc,
+        password: undefined,
       },
     });
   } catch (error) {
@@ -174,6 +175,7 @@ export async function login(req, res) {
     res.status(200).json({
       success: true,
       message: "user successfully logged in",
+      user: { ...userDetails._doc, password: undefined },
     });
   } catch (error) {
     res.status(400).json({

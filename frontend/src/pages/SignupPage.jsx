@@ -1,25 +1,44 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { useNavigate } from "react-router-dom";
+import { Loading } from "@/components/loading";
 export default function Signup() {
   let [email, setEmail] = useState("");
   let [password, setPassword] = useState("");
   let [username, setUsername] = useState("");
-  let { signup, checkAuth } = useContext(AuthContext);
+  let { signup, checkAuth, setUser } = useContext(AuthContext);
   let navigate = useNavigate();
-
+  let [loading, setLoading] = useState(false);
+  function reset() {
+    setEmail("");
+    setPassword("");
+    setUsername("");
+  }
   async function handleClick() {
-    let data = await signup({ email, password, username }= {email:"tarun@gmail.com",password:"12345678",username:"tarun"});
+    setLoading(true);
+    let data = await signup(
+      ({ email, password, username } = {
+        email: "tarun@gmail.com",
+        password: "12345678",
+        username: "tarun",
+      })
+    );
     if (data.success) {
       let validation = await checkAuth();
       if (validation.success) {
-        navigate("/login");
+        setLoading(false);
+        setUser(data.user);
+        console.log(data.user);
+        navigate("/verify-email");
+        reset();
         return;
       }
-      console.log("error occured in token",validation);
+      setLoading(false);
+      console.log("error occured in token", validation);
       return;
     }
-    console.log("error occured", { email, username, password },data);
+    setLoading(false);
+    console.log("error occured", { email, username, password }, data);
   }
   return (
     <>
@@ -70,14 +89,14 @@ export default function Signup() {
               className="border-b-[1.5px] border-gray-600 p-2 outline-none bg-transparent text-white  focus:border-white"
             />
           </div>
-          <div className="text-center text-black">
+          <div className="text-center text-black flex items-center justify-center w-full">
             <button
-              className="bg-white rounded py-1 px-2 text-center text-[10] hover:bg-gray-200"
+              className="bg-white rounded py-1 px-2 text-center  hover:bg-gray-200 flex justify-center items-center min-h-[32px] min-w-[80px]"
               onClick={() => {
                 handleClick();
               }}
             >
-              signup
+              {loading ? <Loading></Loading> : "signup"}
             </button>
           </div>
         </div>
