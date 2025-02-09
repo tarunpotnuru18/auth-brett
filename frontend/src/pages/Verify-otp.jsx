@@ -13,7 +13,7 @@ export function VerifyOtp() {
   return (
     <>
       <div className=" min-h-screen flex justify-center items-center flex-col bg-black ">
-        <div className="text-white ">{value}</div>
+        
         <InputOTP
           maxLength={6}
           onChange={(value) => {
@@ -29,6 +29,7 @@ export function VerifyOtp() {
             <InputOTPSlot index={5} />
           </InputOTPGroup>
         </InputOTP>
+        <div className="text-white mt-3">{value==""?"Enter your one-time-password":`You entered: ${value}`}</div>
       </div>
     </>
   );
