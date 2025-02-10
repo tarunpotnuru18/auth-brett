@@ -2,6 +2,8 @@ import { useContext, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/loading";
+import { toast } from "sonner";
+
 export default function Signup() {
   let [email, setEmail] = useState("");
   let [password, setPassword] = useState("");
@@ -15,7 +17,7 @@ export default function Signup() {
     setUsername("");
   }
   async function handleClick() {
-    setLoading(true);
+    // setLoading(true);
     let data = await signup(
       ({ email, password, username } = {
         email: "tarun@gmail.com",
@@ -31,14 +33,30 @@ export default function Signup() {
         console.log(data.user);
         navigate("/verify-email");
         reset();
-        return;
+        return data;
       }
-      setLoading(false);
+      // setLoading(false);
+      reset()
       console.log("error occured in token", validation);
-      return;
+      throw new Error("validation error");
+      
     }
-    setLoading(false);
+    // setLoading(false);
+    reset()
     console.log("error occured", { email, username, password }, data);
+    throw new Error(data);
+  }
+
+  function Toastgenerator() {
+    
+    toast.promise(handleClick(), {
+      // Toast options:
+      loading: "Signing up...",
+      success: "Signup and authentication successful!",
+      error: (err) => {
+        return `Signup failed: ${err.message || "Unknown error"}`;
+      },
+    });
   }
   return (
     <>
@@ -93,7 +111,7 @@ export default function Signup() {
             <button
               className="bg-white rounded py-1 px-2 text-center  hover:bg-gray-200 flex justify-center items-center min-h-[32px] min-w-[80px]"
               onClick={() => {
-                handleClick();
+                Toastgenerator();
               }}
             >
               {loading ? <Loading></Loading> : "signup"}
