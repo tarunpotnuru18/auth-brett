@@ -30,7 +30,12 @@ export async function signup(req, res) {
         */
     if (validation.success === false) {
       let response = zoderror(validation.error.issues);
-      res.status(400).json(response);
+      console.log(response);
+
+      res.status(400).json({
+        success: false,
+        message: response,
+      });
       return;
     }
     const userAlreadyexists = await user.findOne({ email });
@@ -71,6 +76,7 @@ export async function signup(req, res) {
       },
     });
   } catch (error) {
+    console.log("i am executoing");
     res.status(400).json({
       success: false,
       message: error.message,

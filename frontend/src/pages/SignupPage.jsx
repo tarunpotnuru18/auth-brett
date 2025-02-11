@@ -8,7 +8,7 @@ export default function Signup() {
   let [email, setEmail] = useState("");
   let [password, setPassword] = useState("");
   let [username, setUsername] = useState("");
-  let { signup, checkAuth, setUser } = useContext(AuthContext);
+  let { signup, checkAuth, setUser,setLoggedIn } = useContext(AuthContext);
   let navigate = useNavigate();
   let [loading, setLoading] = useState(false);
   function reset() {
@@ -19,11 +19,7 @@ export default function Signup() {
   async function handleClick() {
     // setLoading(true);
     let data = await signup(
-      ({ email, password, username } = {
-        email: "tarun@gmail.com",
-        password: "12345678",
-        username: "tarun",
-      })
+      ({ email, password, username })
     );
     if (data.success) {
       let validation = await checkAuth();
@@ -31,20 +27,20 @@ export default function Signup() {
         setLoading(false);
         setUser(data.user);
         console.log(data.user);
+        setLoggedIn(true)
         navigate("/verify-email");
         reset();
         return data;
       }
       // setLoading(false);
       reset()
-      console.log("error occured in token", validation);
-      throw new Error("validation error");
-      
+      // console.log("error occured in token", validation);
+      throw new Error("signup failed");
     }
     // setLoading(false);
     reset()
-    console.log("error occured", { email, username, password }, data);
-    throw new Error(data);
+    // console.log( { email, username, password },"data from the signup 412", data);
+    throw new Error(data.message);
   }
 
   function Toastgenerator() {
@@ -52,7 +48,7 @@ export default function Signup() {
     toast.promise(handleClick(), {
       // Toast options:
       loading: "Signing up...",
-      success: "Signup and authentication successful!",
+      success: "Signup successful!",
       error: (err) => {
         return `Signup failed: ${err.message || "Unknown error"}`;
       },

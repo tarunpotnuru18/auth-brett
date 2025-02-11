@@ -3,27 +3,53 @@ import {
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-  
 } from "@/components/ui/input-otp";
-import { REGEXP_ONLY_DIGITS} from "input-otp"
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Loading } from "@/components/loading";
 import { useContext, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 export function VerifyOtp() {
   let [value, setValue] = useState("");
-  let { user,setUser } = useContext(AuthContext);
+  let { user, setUser, verifyEmail } = useContext(AuthContext);
+  let navigate = useNavigate();
+  async function handleClick() {
+    setValue("");
+    await verifyEmail({ email: user?.email, otp: value });
+    navigate("/dashboard");
+  }
+
+  function Toastgenerator() {
+    toast.promise(handleClick(), {
+      // Toast options:
+      loading: "verifying...",
+      success: () => {
+        
+        return "verification sucessful";
+      },
+      error: (err) => {
+        console.log(err);
+        navigate("/signup");
+        return `verification failed: ${err.message || "Unknown error"}`;
+      },
+    });
+  }
 
   return (
     <>
       <div className=" min-h-screen flex justify-center items-center flex-col bg-black ">
-        <div className="w-screen text-white font-bold text-center my-3">Veriy your otp here</div>
+        <div className="w-screen text-white font-bold text-center my-3">
+          Veriy your otp here
+        </div>
 
         <InputOTP
           maxLength={6}
+          value={value}
           onChange={(value) => {
             setValue(value);
           }}
-          pattern={ REGEXP_ONLY_DIGITS}
+          pattern={REGEXP_ONLY_DIGITS}
         >
           <InputOTPGroup>
             <InputOTPSlot index={0} />
@@ -39,8 +65,17 @@ export function VerifyOtp() {
             ? "Enter your one-time-password"
             : `You entered: ${value}`}
         </div>
-        <div className="text-gray-600 mt-2">
-           {`sent to ${user.email}`}
+        <div className="text-gray-600 mt-1 text-[15px]">{`sent to ${user?.email}`}</div>
+        <div className="text-white w-screen flex justify-center py-2">
+          {" "}
+          <button
+            className="bg-white text-black py-1 px-2 rounded-sm hover:bg-slate-600  "
+            onClick={() => {
+              Toastgenerator();
+            }}
+          >
+            Submit
+          </button>{" "}
         </div>
       </div>
     </>
