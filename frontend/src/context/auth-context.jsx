@@ -7,7 +7,6 @@ export const AuthContext = React.createContext();
 export default function AuthContextProvider({ children }) {
   let [user, setUser] = useState(null);
   let [loggedIn, setLoggedIn] = useState(false);
-  let [isverified, setVerified] = useState(false);
   let url = "http://localhost:8080/api";
   async function signup({ email, password, username }) {
     try {
@@ -24,7 +23,7 @@ export default function AuthContextProvider({ children }) {
 
       return data;
     } catch (error) {
-      return { success: false, message: "Signup failed", error: error.message };
+      return { success: false, message: error.message };
     }
   }
   async function verifyEmail({ email, otp }) {
@@ -41,15 +40,10 @@ export default function AuthContextProvider({ children }) {
       });
 
       let response = await data.json();
-      console.log(response);
-      if (!response.success) {
-        console.log(response);
-        throw new Error(response.message);
-      }
+
       return response;
     } catch (error) {
-      console.log(error);
-      throw new Error(error.message);
+      return { success: false, message: error.message };
     }
   }
   async function checkAuth() {
@@ -72,10 +66,30 @@ export default function AuthContextProvider({ children }) {
       return { success: false, message: "Signup failed", error: error.message };
     }
   }
+
+  async function signin({ email, password }) {
+    try {
+      let data = await fetch(url + "/login", {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      let response = await data.json();
+      return response;
+    } catch (error) {
+      console.log("iam executed");
+      console.log(error, "error form context pai signup");
+      return { success: false, message: error.message };
+    }
+  }
   return (
     <>
       <AuthContext.Provider
         value={{
+          signin,
           user,
           setUser,
           loggedIn,
@@ -83,8 +97,6 @@ export default function AuthContextProvider({ children }) {
           url,
           signup,
           checkAuth,
-          Verified,
-          isverified,
           verifyEmail,
         }}
       >

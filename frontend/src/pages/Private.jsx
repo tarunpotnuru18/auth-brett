@@ -1,14 +1,14 @@
-import { AuthContext } from "@/context/auth-context";
-import { useContext, useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { AuthContext } from "../context/auth-context";
+import { useContext } from "react";
+import { Navigate } from "react-router-dom";
 
 export function Private({ children }) {
   let { user, loggedIn } = useContext(AuthContext);
-  let navigate = useNavigate();
-  if (loggedIn && user?.isverified) {
+
+  if (loggedIn && user?.isVerified) {
     return <>{children}</>;
   } else {
-    return  <Navigate to="/login"></Navigate>;
+    return <Navigate to="/login"></Navigate>;
   }
 }
 
@@ -16,8 +16,8 @@ export function PrivateVerifed({ children }) {
   let { user, loggedIn } = useContext(AuthContext);
 
   if (loggedIn) {
-    if (user.verified) {
-     return  <Navigate to="/login"></Navigate>;
+    if (user.isVerified) {
+      return <Navigate to="/dashboard"></Navigate>;
     } else {
       return <>{children}</>;
     }

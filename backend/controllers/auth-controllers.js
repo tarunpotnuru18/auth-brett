@@ -69,7 +69,7 @@ export async function signup(req, res) {
     sendVerificationEmail("tarunpotnuru18@gmail.com", verificationToken);
     res.status(201).json({
       success: true,
-      message: "user succeessfully signedup in",
+      message: "user succeessfully signedup ",
       user: {
         ...dataCreation._doc,
         password: undefined,
@@ -193,7 +193,7 @@ export async function login(req, res) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export function logout(req, res) {
   res.clearCookie("token");
-  res.status(200).json({ success: true, message: "logged out successfullyf" });
+  res.status(200).json({ success: true, message: "logged out successfully" });
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -288,8 +288,9 @@ export async function checkAuth(req, res) {
 
     res.status(200).json({
       success: true,
-      ...userDetails._doc,
-      password: undefined,
+      user:{ ...userDetails._doc,
+        password: undefined,}
+     
     });
   } catch (error) {
     console.log("error checking auth", error);

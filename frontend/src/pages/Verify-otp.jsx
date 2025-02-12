@@ -1,12 +1,12 @@
 import {
   InputOTP,
   InputOTPGroup,
-  InputOTPSeparator,
+ 
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
-import { Loading } from "@/components/loading";
-import { useContext, useState } from "react";
+
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "@/context/auth-context";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -14,10 +14,28 @@ export function VerifyOtp() {
   let [value, setValue] = useState("");
   let { user, setUser, verifyEmail } = useContext(AuthContext);
   let navigate = useNavigate();
+  useEffect(()=>{
+    if(user?.isVerified){
+       navigate("/dashboard")
+    }
+       },[user?.isVerified])
   async function handleClick() {
-    setValue("");
-    await verifyEmail({ email: user?.email, otp: value });
-    navigate("/dashboard");
+      
+    try {
+      let response = await verifyEmail({ email: user?.email, otp: value });
+      if (!response.success) {
+        return Promise.reject(new Error(response.message));
+      }
+
+      setValue("");
+      await setUser((user) => {
+        return { ...user, isVerified: true };
+      });
+      navigate("/dashboard");
+      return response;
+    } catch (error) {
+      Promise.reject(new Error(response.message));
+    }
   }
 
   function Toastgenerator() {
@@ -25,7 +43,6 @@ export function VerifyOtp() {
       // Toast options:
       loading: "verifying...",
       success: () => {
-        
         return "verification sucessful";
       },
       error: (err) => {

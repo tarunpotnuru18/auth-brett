@@ -1,50 +1,39 @@
 import { useContext, useState } from "react";
-import { AuthContext } from "@/context/auth-context";
+import { AuthContext } from "../context/auth-context";
 import { useNavigate } from "react-router-dom";
-import { Loading } from "@/components/loading";
+
 import { toast } from "sonner";
 
 export default function Signup() {
   let [email, setEmail] = useState("");
   let [password, setPassword] = useState("");
   let [username, setUsername] = useState("");
-  let { signup, checkAuth, setUser,setLoggedIn } = useContext(AuthContext);
+  let { signup, setUser, setLoggedIn } = useContext(AuthContext);
   let navigate = useNavigate();
-  let [loading, setLoading] = useState(false);
+
   function reset() {
     setEmail("");
     setPassword("");
     setUsername("");
   }
   async function handleClick() {
-    // setLoading(true);
-    let data = await signup(
-      ({ email, password, username })
-    );
-    if (data.success) {
-      let validation = await checkAuth();
-      if (validation.success) {
-        setLoading(false);
-        setUser(data.user);
-        console.log(data.user);
-        setLoggedIn(true)
-        navigate("/verify-email");
-        reset();
-        return data;
+    try {
+      let data = await signup({ email, password, username });
+      let response = data;
+      if (!response.success) {
+        console.log("error from handleclick in signup");
+        return Promise.reject(new Error(response.message));
       }
-      // setLoading(false);
-      reset()
-      // console.log("error occured in token", validation);
-      throw new Error("signup failed");
+      await setUser({ ...response.user, });
+      setLoggedIn(true);
+      navigate("/verify-email");
+      reset();
+    } catch (error) {
+      return Promise.reject(new Error(error.message));
     }
-    // setLoading(false);
-    reset()
-    // console.log( { email, username, password },"data from the signup 412", data);
-    throw new Error(data.message);
   }
 
   function Toastgenerator() {
-    
     toast.promise(handleClick(), {
       // Toast options:
       loading: "Signing up...",
@@ -110,7 +99,7 @@ export default function Signup() {
                 Toastgenerator();
               }}
             >
-              {loading ? <Loading></Loading> : "signup"}
+              "signup"
             </button>
           </div>
         </div>
