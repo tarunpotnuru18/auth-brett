@@ -43,7 +43,7 @@ export async function sendResetEmail(email, token) {
 
       to: [email],
       subject: "here is your password reset email!",
-      html: "hey there here is your password reset token " + token,
+      html: "hey there here is your password reset token" + token,
     });
     // console.log(data,error)
   } catch (error) {

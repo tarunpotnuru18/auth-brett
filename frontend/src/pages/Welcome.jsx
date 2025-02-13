@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 
-
 export default function Welcome() {
-  
   return (
     <>
       <div className="bg-black text-white  min-h-screen w-screen pt-[50px]">
@@ -25,16 +23,15 @@ export default function Welcome() {
           </div>
           <button
             onClick={() => {
-
-                toast({
-                    className: "bg-black  text-white",
-                  description: "Your message has been sent.",
-                })
-              }}
+              toast({
+                className: "bg-black  text-white",
+                description: "Your message has been sent.",
+              });
+            }}
           >
             toast
           </button>
-          
+
           <div className="w-full   h-[50px] text-center py-2 px-[10px]">
             made with ❤️ by <span className="text-red-500">tarun</span>
           </div>

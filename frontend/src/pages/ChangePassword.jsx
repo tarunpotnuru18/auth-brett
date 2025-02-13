@@ -1,76 +1,70 @@
-import { useState, useContext, useEffect } from "react";
-
-import { toast } from "sonner";
 import { AuthContext } from "../context/auth-context";
-import { useNavigate } from "react-router-dom";
-export default function Login() {
-  let navigate = useNavigate();
-  let [email, setEmail] = useState("");
-  let [password, setPassword] = useState("");
-  let { user, setUser, loggedIn, setLoggedIn, signin } =
-    useContext(AuthContext);
+import { useContext, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
+export default function ChangePassword() {
+  let { token } = useParams();
+  let { changePassword, user, logout } = useContext(AuthContext);
+  let [password, setPassword] = useState("");
+  let [newpassword, setNewPassword] = useState("");
+
+  let navigate = useNavigate();
   async function handleClick() {
     try {
-      let data = await signin({ email, password });
+      let data = await changePassword({
+        email: user.email,
+        token,
+        newPassword: password,
+      });
+      // console.log(token)
       if (!data.success) {
-        // console.log("data.message", data);
         return Promise.reject(new Error(data.message));
       }
-      await setUser({ ...data.user });
-      setLoggedIn(true);
-      navigate("/dashboard");
-      return "signin sucesssful from handleclick";
+      await logout();
+      navigate("/login");
     } catch (error) {
-      // console.log(error);
+      // console.log(error)
       return Promise.reject(new Error(error.message));
     }
   }
-
-  async function ToastGenerator() {
+  function ToastGenerator() {
     toast.promise(handleClick(), {
-      loading: "logging in",
-      success: () => {
-        return "login successful";
-      },
+      loading: "loading...",
+      success: `changed password successfully, please re login to continue`,
       error: (err) => {
-        return err.message;
+        return `operation failed: ${err.message}`;
       },
     });
   }
-
   return (
     <>
       <div className="w-screen h-screen bg-black flex justify-center items-center">
         <div className=" rounded-sm flex flex-col justify-center p-5 gap-3">
           <div className="inline-flex flex-col gap-[3px]">
-            <div className="text-white text-left text-xl">Sign in</div>
-            <div className="text-gray-400 text-left">
-              we are waiting to see you back
+            <div className="text-white text-left text-xl">changePassword</div>
+            <div className="text-white text-left ">
+              {"please enter your new password" + user.username}
             </div>
           </div>
 
           <div className="inline-flex flex-col gap-[3px]">
-            <div className="text-white">email</div>
-            <input
-              type="text"
-              placeholder="enter your email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-              }}
-              className="border-b-[1.5px] border-gray-600 p-2 outline-none bg-transparent text-white  focus:border-white"
-            />
-          </div>
-
-          <div className="inline-flex flex-col gap-[3px]">
-            <div className="text-white">Password</div>
+            <div className="text-white">password</div>
             <input
               type="text"
               placeholder="enter your password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
+              }}
+              className="border-b-[1.5px] border-gray-600 p-2 outline-none bg-transparent text-white  focus:border-white"
+            />
+            <input
+              type="text"
+              placeholder="enter your password again"
+              value={newpassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
               }}
               className="border-b-[1.5px] border-gray-600 p-2 outline-none bg-transparent text-white  focus:border-white"
             />
@@ -83,7 +77,7 @@ export default function Login() {
                 ToastGenerator();
               }}
             >
-              signin
+              Change Password
             </button>
           </div>
         </div>

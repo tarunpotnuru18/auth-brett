@@ -10,7 +10,7 @@ export default function AuthContextProvider({ children }) {
   let url = "http://localhost:8080/api";
   async function signup({ email, password, username }) {
     try {
-      console.log(email, password, username);
+      // console.log(email, password, username);
       let response = await fetch(url + "/signup", {
         method: "POST",
         headers: {
@@ -62,7 +62,7 @@ export default function AuthContextProvider({ children }) {
       let data = await response.json();
       return data;
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       return { success: false, message: "Signup failed", error: error.message };
     }
   }
@@ -80,8 +80,66 @@ export default function AuthContextProvider({ children }) {
       let response = await data.json();
       return response;
     } catch (error) {
-      console.log("iam executed");
-      console.log(error, "error form context pai signup");
+      // console.log("iam executed");
+      // console.log(error, "error form context pai signup");
+      return { success: false, message: error.message };
+    }
+  }
+  async function logout() {
+    try {
+      let data = await fetch(url + "/logout", {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      let response = await data.json();
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    } catch (error) {
+      // console.log("error from the logout endpoint", error);
+      return { success: false, message: error.message };
+    }
+  }
+  async function forgotPassword({ email }) {
+    try {
+      let data = await fetch(url + "/forgot-password", {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email }),
+      });
+      let response = await data.json();
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    } catch (error) {
+      // console.log(error);
+      return { success: false, message: error.message };
+    }
+  }
+  async function changePassword({ email, newPassword, token }) {
+    try {
+      let data = await fetch(url + "/change-password", {
+        method: "POST",
+        headers: {
+          "content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, newPassword, token }),
+      });
+      let response = await data.json();
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      return response;
+    } catch (error) {
       return { success: false, message: error.message };
     }
   }
@@ -98,6 +156,9 @@ export default function AuthContextProvider({ children }) {
           signup,
           checkAuth,
           verifyEmail,
+          logout,
+          forgotPassword,
+          changePassword,
         }}
       >
         {children}

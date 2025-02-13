@@ -192,8 +192,12 @@ export async function login(req, res) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export function logout(req, res) {
-  res.clearCookie("token");
-  res.status(200).json({ success: true, message: "logged out successfully" });
+  try {
+    res.clearCookie("token");
+    res.status(200).json({ success: true, message: "logged out successfully" });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -212,6 +216,7 @@ export async function forgotPassword(req, res) {
     let resetToken = generateVerificationToken();
     //send resettoken to email
     await sendResetEmail("tarunpotnuru18@gmail.com", resetToken);
+    console.log(resetToken);
     let hashedResetToken = await bcrypt.hash(resetToken, 10);
     userDetails.resetPasswordToken = hashedResetToken;
     userDetails.resetPasswordTokenExpiresAt = Date.now() + 10 * 60 * 1000;
@@ -221,17 +226,18 @@ export async function forgotPassword(req, res) {
       message: "reset token sucessfully sent to email",
     });
   } catch (error) {
-    res.status(200).json({
-      success: true,
-      message: "reset token sucessfully sent to email",
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      message: "reset token sending failed",
     });
   }
 }
 
 export async function changePassword(req, res) {
   try {
-    let { email, newPassword } = req.body;
-    const { token: passwordToken } = req.params;
+    let { email, newPassword, token: passwordToken } = req.body;
+    // const { token: passwordToken } = req.params;
     let userDetails = await user.findOne({
       email,
       resetPasswordTokenExpiresAt: { $gt: Date.now() },
@@ -244,6 +250,7 @@ export async function changePassword(req, res) {
       });
       return;
     }
+    console.log(passwordToken);
     let isvalidToken = await bcrypt.compare(
       passwordToken.toString(),
       userDetails.resetPasswordToken
@@ -288,9 +295,7 @@ export async function checkAuth(req, res) {
 
     res.status(200).json({
       success: true,
-      user:{ ...userDetails._doc,
-        password: undefined,}
-     
+      user: { ...userDetails._doc, password: undefined },
     });
   } catch (error) {
     console.log("error checking auth", error);

@@ -21,10 +21,10 @@ export default function Signup() {
       let data = await signup({ email, password, username });
       let response = data;
       if (!response.success) {
-        console.log("error from handleclick in signup");
+        // console.log("error from handleclick in signup");
         return Promise.reject(new Error(response.message));
       }
-      await setUser({ ...response.user, });
+      await setUser({ ...response.user });
       setLoggedIn(true);
       navigate("/verify-email");
       reset();

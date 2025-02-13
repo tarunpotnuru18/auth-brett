@@ -1,7 +1,6 @@
 import {
   InputOTP,
   InputOTPGroup,
- 
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
@@ -14,13 +13,12 @@ export function VerifyOtp() {
   let [value, setValue] = useState("");
   let { user, setUser, verifyEmail } = useContext(AuthContext);
   let navigate = useNavigate();
-  useEffect(()=>{
-    if(user?.isVerified){
-       navigate("/dashboard")
+  useEffect(() => {
+    if (user?.isVerified) {
+      navigate("/dashboard");
     }
-       },[user?.isVerified])
+  }, [user?.isVerified]);
   async function handleClick() {
-      
     try {
       let response = await verifyEmail({ email: user?.email, otp: value });
       if (!response.success) {
@@ -46,7 +44,7 @@ export function VerifyOtp() {
         return "verification sucessful";
       },
       error: (err) => {
-        console.log(err);
+        // console.log(err);
         navigate("/signup");
         return `verification failed: ${err.message || "Unknown error"}`;
       },
